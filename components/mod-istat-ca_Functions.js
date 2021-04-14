@@ -3,7 +3,6 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
     var loadingControl = GisClientMap.map.getControlsByClass('OpenLayers.Control.LoadingPanel')[0];
     loadingControl.maximizeControl();
 
-    debugger;
     var parserWKT = new OpenLayers.Format.WKT();
     var wktGeom = parserWKT.extractGeometry(selectionGeom);
     var istatReportHTML = "";
@@ -24,16 +23,24 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
         data: params,
         success: function(response) {
             if(!response || typeof(response) != 'object') {
-                return alert('Errore di sistema');
+                var drawControl = GisClientMap.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+                if (drawControl.length == 1)
+                    drawControl[0].deactivate();
                 loadingControl.minimizeControl();
+                return alert('Errore di sistema');
             }
             if(!response.length) {
                 istatReportHTML = "Nessun dato ISTAT disponibile nell'area selezionata";
+                $('#DetailsWindow div.modal-body').html(istatReportHTML);
+                $('#DetailsWindow h4.modal-title').html('Calcolo dati ISTAT su poligono selezionato');
+                $('#DetailsWindow').modal('show');
+                var drawControl = GisClientMap.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+                if (drawControl.length == 1)
+                    drawControl[0].deactivate();
                 loadingControl.minimizeControl();
                 return;
             }
 
-            debugger;
             var features = [];
             var nAbitanti = [0,0,0,0];
             var nAbitazOccResid = [0,0,0,0];
@@ -81,7 +88,7 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
                 var istatFeature = new OpenLayers.Feature.Vector(geometry, {fid:istatObj.fid,color:clientConfig.MOD_ISTAT_CA_LAYER_COLOR});
                 features.push(istatFeature);
             }
-            debugger;
+
             var istatLayer = GisClientMap.map.getLayersByName('layer-mod-istat-ca')[0];
             istatLayer.addFeatures(features);
             istatLayer.refresh();
@@ -139,9 +146,16 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
             $('#DetailsWindow h4.modal-title').html('Calcolo dati ISTAT su poligono selezionato');
             $('#DetailsWindow').modal('show');
 
+            var drawControl = GisClientMap.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+            if (drawControl.length == 1)
+                drawControl[0].deactivate();
+
             loadingControl.minimizeControl();
         },
         error: function() {
+            var drawControl = GisClientMap.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+            if (drawControl.length == 1)
+                drawControl[0].deactivate();
             loadingControl.minimizeControl();
         }
     });

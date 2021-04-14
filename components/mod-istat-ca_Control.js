@@ -64,15 +64,6 @@ window.GCComponents["Layers"].addLayer('layer-mod-istat-ca', {
     })
 }, {
     "sketchcomplete": function(obj) {
-        debugger;
-        // **** Get main selection control
-        var selectControls = this.map.getControlsBy('gc_id', 'control-querytoolbar');
-        if (selectControls.length != 1)
-            return;
-        if (!selectControls[0].controls)
-            return;
-        var selectControl = selectControls[0];
-
         // **** insert configured WFS layers
         if (typeof(clientConfig.MOD_ISTAT_CA_LAYER) === 'undefined') {
             return;
