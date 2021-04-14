@@ -1,0 +1,11 @@
+clientConfig.PLUGINS_CONFIG['mod-istat-ca'] = {
+    pluginLayers: [],
+    pluginDOMElements: [],
+    pluginComponents: ['gisclient-maps_mod-istat-ca:mod-istat-ca_Control:1:itools','gisclient-maps_mod-istat-ca:mod-istat-ca_Functions:99:zhidden'],
+    pluginClientConfig: {
+        MOD_ISTAT_CA_LAYER: '',
+        MOD_ISTAT_CA_BUILDINGS_LAYER: '',
+        MOD_ISTAT_CA_FEATURE_COLOR: 'yellow',
+        MOD_ISTAT_CA_SELECTION_COLOR: 'red'
+    }
+}
