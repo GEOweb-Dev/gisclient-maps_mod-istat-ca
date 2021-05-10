@@ -68,6 +68,7 @@ window.GCComponents["Layers"].addLayer('layer-mod-istat-ca', {
         if (typeof(clientConfig.MOD_ISTAT_CA_LAYER) === 'undefined') {
             return;
         }
+        this.removeAllFeatures();
 
         window.GCComponents.Functions.modIstatCaGetData(obj.feature.geometry);
         obj.feature.attributes.color = clientConfig.MOD_ISTAT_CA_SELECTION_COLOR;
@@ -82,37 +83,67 @@ window.GCComponents["Layers"].addLayer('layer-mod-istat-ca', {
     }
 });
 
-// **** Point marker draw control
-window.GCComponents["Controls"].addControl('control-mod-istat-ca', function(map){
-    return new OpenLayers.Control.DrawFeature(
-        map.getLayersByName('layer-mod-istat-ca')[0],
-        OpenLayers.Handler.Polygon,
-        {
-            gc_id: 'control-mod-istat-ca',
-            eventListeners: {
-                'activate': function(e){
-                    if (map.currentControl != this) {
-                        map.currentControl.deactivate();
-                        var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
-                        if (touchControl.length > 0) {
-                            touchControl[0].dragPan.deactivate();
+window.GCComponents["Controls"].addControl('control-mod-istat-ca-toolbar', function(map){
+    return new  OpenLayers.Control.Panel({
+        gc_id: 'control-mod-istat-ca-toolbar',
+        createControlMarkup:customCreateControlMarkup,
+        div:document.getElementById("map-toolbar-mod-istat-ca"),
+        autoActivate:false,
+        saveState:true,
+        draw: function() {
+            var controls = [
+                new OpenLayers.Control.DrawFeature(
+                    map.getLayersByName('layer-mod-istat-ca')[0],
+                    OpenLayers.Handler.Polygon,
+                    {
+                        gc_id: 'control-mod-istat-ca',
+                        iconclass:"glyphicon-white glyphicon-edit",
+                        text:'Selezione grafica',
+                        title:'Seleziona Sezioni di Censimento',
+                        eventListeners: {
+                            'activate': function(e){
+                                if (map.currentControl != this) {
+                                    map.currentControl.deactivate();
+                                    var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
+                                    if (touchControl.length > 0) {
+                                        touchControl[0].dragPan.deactivate();
+                                    }
+                                }
+                                map.currentControl=this;
+                            },
+                            'deactivate': function(e){
+                                var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
+                                if (touchControl.length > 0) {
+                                    touchControl[0].dragPan.activate();
+                                }
+                                var btnControl = map.getControlsBy('id', 'button-mod-istat-ca')[0];
+                                if (btnControl.active)
+                                    btnControl.deactivate();
+
+                            }
                         }
                     }
-                    map.currentControl=this;
-                },
-                'deactivate': function(e){
-                    var touchControl = map.getControlsByClass("OpenLayers.Control.TouchNavigation");
-                    if (touchControl.length > 0) {
-                        touchControl[0].dragPan.activate();
+                ),
+                new OpenLayers.Control(
+                    {
+                        ctrl: this,
+                        type: OpenLayers.Control.TYPE_BUTTON ,
+                        iconclass:"glyphicon-white glyphicon-share",
+                        text:"Importa/Esporta Poligono",
+                        title:"Importa/Esporta Poligono",
+                        trigger: function () {
+                            window.GCComponents.Functions.modIstatCaEditPanel.call(this);
+                        }
                     }
-                    var btnControl = map.getControlsBy('id', 'button-mod-istat-ca')[0];
-                    if (btnControl.active)
-                        btnControl.deactivate();
-
-                }
-            }
+                )
+            ];
+            this.addControls(controls);
+            OpenLayers.Control.Panel.prototype.draw.apply(this);
+        },
+        redraw: function () {
+            OpenLayers.Control.Panel.prototype.redraw.apply(this);
         }
-    )
+    })
 });
 
 // **** Toolbar button
@@ -126,14 +157,14 @@ window.GCComponents["SideToolbar.Buttons"].addButton (
             this.map.getLayersByName('layer-mod-istat-ca')[0].removeAllFeatures();
             if (this.active) {
                 this.deactivate();
-                var drawControl = this.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+                var drawControl = this.map.getControlsBy('gc_id', 'control-mod-istat-ca-toolbar');
                 if (drawControl.length == 1)
                     drawControl[0].deactivate();
             }
             else
             {
                 this.activate();
-                var drawControl = this.map.getControlsBy('gc_id', 'control-mod-istat-ca');
+                var drawControl = this.map.getControlsBy('gc_id', 'control-mod-istat-ca-toolbar');
                 if (drawControl.length == 1)
                     drawControl[0].activate();
             }

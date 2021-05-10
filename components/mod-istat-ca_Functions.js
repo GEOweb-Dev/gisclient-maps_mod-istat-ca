@@ -160,3 +160,75 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
         }
     });
 };
+
+window.GCComponents.Functions.modIstatCaEditPanel = function () {
+    formTitle = 'Inserisci o esporta poligono di selezione';
+    var istatLayer = GisClientMap.map.getLayersByName('layer-mod-istat-ca')[0];
+    var parserWKT = new OpenLayers.Format.WKT();
+
+    $('ul.nav-tabs').hide();
+    $('#ricerca').addClass('active');
+    $('#avanzata').removeClass('active');
+    $('#searchFormTitle').html(formTitle);
+    var form = '<table>';
+    form += '<tr><td>Poligono di selezione (WKT - Coordinate in ';
+    form += GisClientMap.map.displayProjection + ' ' + Proj4js.defs[GisClientMap.map.displayProjection].match(/^\+title=[ ]*([^+]*)/)[1].trim();
+    form += ')</td></tr>';
+    form += '<tr><td><textarea name="select_polygon_wkt" class="form-control" rows="4" id="select_polygon_wkt">';
+    debugger;
+    if (istatLayer.features.length > 0) {
+        var fSelection = istatLayer.features[0].clone();
+        if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
+            fSelection.geometry.transform(GisClientMap.map.projection, GisClientMap.map.displayProjection);
+        }
+        form += parserWKT.write(fSelection);
+    }
+    form += '</textarea>';
+    form += '</td></tr>';
+    form += '</table>';
+
+    if ($.mobile) {
+        form += '<button type="submit" role="btn-select" class="btn btn-default ui-btn ui-shadow ui-corner-all">Seleziona</button>';
+        form += '<button type="submit" role="btn-copy" class="btn btn-default ui-btn ui-shadow ui-corner-all">Copia</button>';
+    }
+    else {
+        form += '<button type="submit" role="btn-select" class="btn btn-default">Seleziona</button>';
+        form += '<button type="submit" role="btn-copy" class="btn btn-default">Copia</button>';
+    }
+
+    //form += '</form>';
+
+    $('#ricerca').empty().append(form);
+
+    $('#ricerca button[role="btn-select"]').click(function(event) {
+        event.preventDefault();
+        var WKTInput = $('#select_polygon_wkt').val();
+        var geomInput = OpenLayers.Geometry.fromWKT(WKTInput);
+        if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
+            geomInput.transform(GisClientMap.map.displayProjection, GisClientMap.map.projection);
+        }
+        var istatFeature = new OpenLayers.Feature.Vector(geomInput, {color:clientConfig.MOD_ISTAT_CA_SELECTION_COLOR});
+        istatLayer.removeAllFeatures();
+        istatLayer.addFeatures([istatFeature]);
+        window.GCComponents.Functions.modIstatCaGetData(geomInput);
+        $('#SearchWindow').modal('hide');
+    });
+
+    $('#ricerca button[role="btn-copy"]').click(function(event) {
+        event.preventDefault();
+        var geomCopy = document.getElementById("select_polygon_wkt");
+        if (geomCopy.value.length > 0) {
+            geomCopy.select();
+            geomCopy.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert ('Geometria WKT copiata negli appunti');
+        }
+        else {
+            alert ('Geometria WKT non disponibile per esportazione');
+        }
+        $('#SearchWindow').modal('hide');
+    });
+
+
+    $('#SearchWindow').modal('show');
+};
