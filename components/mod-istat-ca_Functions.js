@@ -161,6 +161,48 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
     });
 };
 
+window.GCComponents.Functions.modIstatCaExport = function (selectionGeom, exportType) {
+    var loadingControl = GisClientMap.map.getControlsByClass('OpenLayers.Control.LoadingPanel')[0];
+    loadingControl.maximizeControl();
+    var params = {
+        srid: GisClientMap.map.projection,
+        export: exportType,
+        sGeom: selectionGeom
+    };
+
+    if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
+        params.srid = GisClientMap.map.displayProjection;
+    }
+
+    $.ajax({
+        url: clientConfig.GISCLIENT_URL + '/services/plugins/mod-istat-ca/istatZoneCalc.php',
+        method: 'POST',
+        dataType: 'json',
+        data: params,
+        success: function(response) {
+            if(!response || typeof(response) != 'object') {
+                loadingControl.minimizeControl();
+                return alert('Errore di sistema');
+            }
+            if(!response.hasOwnProperty('result')) {
+                loadingControl.minimizeControl();
+                return alert('Errore di sistema');
+            }
+            if(response.result != 'ok') {
+                loadingControl.minimizeControl();
+                return alert(response.message);
+            }
+
+            window.location.assign(response.file);
+
+            loadingControl.minimizeControl();
+        },
+        error: function() {
+            loadingControl.minimizeControl();
+        }
+    });
+}
+
 window.GCComponents.Functions.modIstatCaEditPanel = function () {
     formTitle = 'Inserisci o esporta poligono di selezione';
     var istatLayer = GisClientMap.map.getLayersByName('layer-mod-istat-ca')[0];
@@ -175,7 +217,7 @@ window.GCComponents.Functions.modIstatCaEditPanel = function () {
     form += GisClientMap.map.displayProjection + ' ' + Proj4js.defs[GisClientMap.map.displayProjection].match(/^\+title=[ ]*([^+]*)/)[1].trim();
     form += ')</td></tr>';
     form += '<tr><td><textarea name="select_polygon_wkt" class="form-control" rows="4" id="select_polygon_wkt">';
-    debugger;
+
     if (istatLayer.features.length > 0) {
         var fSelection = istatLayer.features[0].clone();
         if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
@@ -190,10 +232,12 @@ window.GCComponents.Functions.modIstatCaEditPanel = function () {
     if ($.mobile) {
         form += '<button type="submit" role="btn-select" class="btn btn-default ui-btn ui-shadow ui-corner-all">Seleziona</button>';
         form += '<button type="submit" role="btn-copy" class="btn btn-default ui-btn ui-shadow ui-corner-all">Copia</button>';
+        form += '<button type="submit" role="btn-export-shp" class="btn btn-default ui-btn ui-shadow ui-corner-all">Esporta SHP</button>';
     }
     else {
         form += '<button type="submit" role="btn-select" class="btn btn-default">Seleziona</button>';
         form += '<button type="submit" role="btn-copy" class="btn btn-default">Copia</button>';
+        form += '<button type="submit" role="btn-export-shp" class="btn btn-default">Esporta SHP</button>';
     }
 
     //form += '</form>';
@@ -203,15 +247,20 @@ window.GCComponents.Functions.modIstatCaEditPanel = function () {
     $('#ricerca button[role="btn-select"]').click(function(event) {
         event.preventDefault();
         var WKTInput = $('#select_polygon_wkt').val();
-        var geomInput = OpenLayers.Geometry.fromWKT(WKTInput);
-        if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
-            geomInput.transform(GisClientMap.map.displayProjection, GisClientMap.map.projection);
+        if (WKTInput.length > 0) {
+            var geomInput = OpenLayers.Geometry.fromWKT(WKTInput);
+            if (GisClientMap.map.projection != GisClientMap.map.displayProjection) {
+                geomInput.transform(GisClientMap.map.displayProjection, GisClientMap.map.projection);
+            }
+            var istatFeature = new OpenLayers.Feature.Vector(geomInput, {color:clientConfig.MOD_ISTAT_CA_SELECTION_COLOR});
+            istatLayer.removeAllFeatures();
+            istatLayer.addFeatures([istatFeature]);
+            window.GCComponents.Functions.modIstatCaGetData(geomInput);
+            $('#SearchWindow').modal('hide');
         }
-        var istatFeature = new OpenLayers.Feature.Vector(geomInput, {color:clientConfig.MOD_ISTAT_CA_SELECTION_COLOR});
-        istatLayer.removeAllFeatures();
-        istatLayer.addFeatures([istatFeature]);
-        window.GCComponents.Functions.modIstatCaGetData(geomInput);
-        $('#SearchWindow').modal('hide');
+        else {
+            alert ('Nessuna geometria disponibile per effettuare una selezione');
+        }
     });
 
     $('#ricerca button[role="btn-copy"]').click(function(event) {
@@ -222,13 +271,24 @@ window.GCComponents.Functions.modIstatCaEditPanel = function () {
             geomCopy.setSelectionRange(0, 99999);
             document.execCommand("copy");
             alert ('Geometria WKT copiata negli appunti');
+            $('#SearchWindow').modal('hide');
         }
         else {
             alert ('Geometria WKT non disponibile per esportazione');
         }
-        $('#SearchWindow').modal('hide');
     });
 
+    $('#ricerca button[role="btn-export-shp"]').click(function(event) {
+        event.preventDefault();
+        var WKTInput = $('#select_polygon_wkt').val();
+        if (WKTInput.length > 0) {
+            window.GCComponents.Functions.modIstatCaExport(WKTInput, 'shp');
+            $('#SearchWindow').modal('hide');
+        }
+        else {
+            alert ('Geometria WKT non disponibile per esportazione');
+        }
+    });
 
     $('#SearchWindow').modal('show');
 };
