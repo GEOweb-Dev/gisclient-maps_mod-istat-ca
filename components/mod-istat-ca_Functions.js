@@ -52,7 +52,15 @@ window.GCComponents.Functions.modIstatCaGetData = function (selectionGeom) {
             for(var i = 0; i < response.length; i++) {
                 var istatObj = response[i];
                 var supRatio = istatObj.istat_ca_area/istatObj.istat_gc_area;
+                if (isNaN(supRatio)) {
+                    supRatio = 0;
+                    console.log('supRatio set to 0 at index' + i);
+                }
                 var buildRatio = istatObj.ca_n_building/istatObj.gc_n_building;
+                if (isNaN(buildRatio)) {
+                    buildRatio = 0;
+                    console.log('buildRatio set to 0 at index' + i);
+                }
                 if (supRatio == 1) {
                     nAbitanti[0] += istatObj.abitanti;
                     nAbitazOccResid[0] += istatObj.a2;
