@@ -114,7 +114,7 @@ window.GCComponents["Controls"].addControl('control-mod-istat-ca-select_query_re
                         this.unselectAll();
                         return;
                     }
-                    if ((typeof(clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE) === 'undefined') || (clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE.length == 0) || (clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE.indexOf(obj.featureTypeName) > 0 )) {
+                    if ((typeof(clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE) === 'undefined') || (clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE.length == 0) || (clientConfig.MOD_ISTAT_CA_LAYERS_SELECTABLE.indexOf(obj.featureTypeName) >= 0 )) {
                         var selectionFeature = new OpenLayers.Feature.Vector(obj.geometry, {fid:0,color:clientConfig.MOD_ISTAT_CA_SELECTION_COLOR});
                         var istatLayer = GisClientMap.map.getLayersByName('layer-mod-istat-ca')[0];
                         istatLayer.removeAllFeatures();
