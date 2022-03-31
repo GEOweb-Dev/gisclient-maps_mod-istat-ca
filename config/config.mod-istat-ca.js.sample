@@ -6,6 +6,7 @@ clientConfig.PLUGINS_CONFIG['mod-istat-ca'] = {
         MOD_ISTAT_CA_LAYER: '',
         MOD_ISTAT_CA_BUILDINGS_LAYER: '',
         MOD_ISTAT_CA_FEATURE_COLOR: 'yellow',
-        MOD_ISTAT_CA_SELECTION_COLOR: 'red'
+        MOD_ISTAT_CA_SELECTION_COLOR: 'red',
+        MOD_ISTAT_CA_LAYERS_SELECTABLE: []
     }
 }
